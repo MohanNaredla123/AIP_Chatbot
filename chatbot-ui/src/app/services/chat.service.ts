@@ -13,10 +13,14 @@ interface RasaResponse {
   providedIn: 'root',
 })
 export class ChatService {
-  private apiUrl = 'http://localhost:5005/webhooks/rest/webhook';
+  private apiUrl = 'http://localhost:5005/';
   private messages: Message[] = [];
 
   constructor(private http: HttpClient) {}
+
+  setApiBase(base: string): void {
+    this.apiUrl = base.replace(/\/+$/, '') + '/webhooks/rest/webhook';
+  }
 
   sendMessage(message: string): Observable<Message[]> {
     const payload = { sender: 'user', message };

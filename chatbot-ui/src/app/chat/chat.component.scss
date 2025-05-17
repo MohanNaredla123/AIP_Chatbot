@@ -65,7 +65,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 5px 20px 5px 20px;
   background-color: var(--clr-teal-900);
   color: #fff;
 }
@@ -96,9 +96,7 @@
 .expand-button:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
-.expand-button:active {
-  transform: rotate(90deg);
-}
+
 .close-button:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
@@ -226,19 +224,4 @@
   padding: 6px;
   font-size: 0.8rem;
   z-index: 1000;
-}
-.chat-container.expanded {
-  display: flex;
-  flex-direction: column;
-}
-.chat-container.expanded .messages-container {
-  flex: 1;
-  max-height: calc(100vh - 130px);
-  overflow-y: auto;
-}
-.chat-container.expanded .input-container {
-  position: relative;
-  bottom: 0;
-  width: 100%;
-  flex-shrink: 0;
 }
