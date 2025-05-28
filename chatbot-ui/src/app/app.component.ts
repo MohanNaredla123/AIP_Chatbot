@@ -5,10 +5,12 @@ import {
   Input,
   OnChanges,
   SimpleChanges,
+  input,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChatComponent } from './chat/chat.component';
 import { ChatService } from './services/chat.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -24,9 +26,13 @@ export class AppComponent implements OnChanges {
   isChatOpen = false;
   isChatExpanded = false;
 
-  @Input('api-base') apiBase = 'http://localhost:5005/webhooks/rest/webhook';
+  @Input('api-base') apiBase = 'http://localhost:5005/';
+  @Input('role') role = '';
+  @Input('rag-url') ragUrl = 'http://localhost:8000';
 
-  constructor(private chatSvc: ChatService) {
+  private previousRole: string = '';
+
+  constructor(private chatSvc: ChatService, private http: HttpClient) {
     this.chatSvc.setApiBase(this.apiBase);
   }
 
@@ -34,6 +40,28 @@ export class AppComponent implements OnChanges {
     if (ch['apiBase'] && ch['apiBase'].currentValue) {
       this.chatSvc.setApiBase(ch['apiBase'].currentValue);
     }
+
+    if (
+      ch['role'] &&
+      ch['role'].currentValue &&
+      ch['role'].currentValue !== this.previousRole
+    ) {
+      this.previousRole = ch['role'].currentValue;
+      this.updateRoleConfig(ch['role'].currentValue);
+    }
+  }
+
+  private updateRoleConfig(role: string): void {
+    const ragEndpoint = `${this.ragUrl}/update-role`;
+
+    this.http.post(ragEndpoint, { role }).subscribe({
+      next: (response) => {
+        console.log('Role updated successfully:', response);
+      },
+      error: (error) => {
+        console.error('Failed to update role:', error);
+      },
+    });
   }
 
   toggleChat(): void {

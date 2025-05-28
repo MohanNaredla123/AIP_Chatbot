@@ -26,6 +26,4 @@ dist-ssr
 venv/
 __pycache__/
 *.pdf
-json/
-questions.json
-conversation_history/
+config/
