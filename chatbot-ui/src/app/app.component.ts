@@ -5,7 +5,6 @@ import {
   Input,
   OnChanges,
   SimpleChanges,
-  input,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChatComponent } from './chat/chat.component';
@@ -26,9 +25,8 @@ export class AppComponent implements OnChanges {
   isChatOpen = false;
   isChatExpanded = false;
 
-  @Input('api-base') apiBase = 'http://localhost:5005/';
+  @Input('api-base') apiBase = 'http://localhost:8000';
   @Input('role') role = '';
-  @Input('rag-url') ragUrl = 'http://localhost:8000';
 
   private previousRole: string = '';
 
@@ -52,11 +50,12 @@ export class AppComponent implements OnChanges {
   }
 
   private updateRoleConfig(role: string): void {
-    const ragEndpoint = `${this.ragUrl}/update-role`;
+    const roleEndpoint = `${this.apiBase}/update-role`;
 
-    this.http.post(ragEndpoint, { role }).subscribe({
+    this.http.post(roleEndpoint, { role }).subscribe({
       next: (response) => {
         console.log('Role updated successfully:', response);
+        this.chatSvc.clearMessages();
       },
       error: (error) => {
         console.error('Failed to update role:', error);

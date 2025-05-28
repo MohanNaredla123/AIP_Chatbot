@@ -24,7 +24,7 @@ async function registerChatbotElement() {
     injector: app.injector,
   });
 
-  (ChatbotElement as any).observedAttributes = ['api-base', 'role', 'rag-url'];
+  (ChatbotElement as any).observedAttributes = ['api-base', 'role'];
 
   (ChatbotElement as any).prototype.attributeChangedCallback = function (
     name: string,
@@ -36,9 +36,6 @@ async function registerChatbotElement() {
     }
     if (name === 'role') {
       (this as any).role = value;
-    }
-    if (name === 'rag-url') {
-      (this as any).ragUrl = value;
     }
   };
 
