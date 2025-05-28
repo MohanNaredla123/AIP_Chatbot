@@ -1,7 +1,7 @@
 import os
 import re 
 import pickle
-from rag_service.utils.data import Data
+from rag_service.data import Data
 
 from langchain_community.vectorstores import FAISS
 from langchain.schema import Document

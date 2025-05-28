@@ -7,24 +7,14 @@ from langchain.docstore import InMemoryDocstore
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.schema import Document
 from langchain.vectorstores import FAISS
-from langchain_community.retrievers import BM25Retriever, EnsembleRetriever
+from langchain_community.retrievers import BM25Retriever
+from langchain.retrievers.ensemble import EnsembleRetriever
 
 
-BASE_DIR = pathlib.Path("indexHistory/history_indices")
+BASE_DIR = pathlib.Path("data/indexHistory")
 BASE_DIR.mkdir(exist_ok=True)
 RAW_FILE = "raw_texts.pkl"
 EMB = SentenceTransformerEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-
-def _faiss_blank(dim: int) -> FAISS:
-    index = faiss.IndexFlatIP(dim)
-    docstore = InMemoryDocstore({})
-    return FAISS(
-        embedding_function=EMB,
-        index=index,
-        docstore=docstore,
-        index_to_docstore_id={}
-    )
 
 
 class HistoryIndex:
@@ -39,7 +29,7 @@ class HistoryIndex:
                 str(self.dir), EMB, allow_dangerous_deserialization=True
             )
         else:
-            self.vector_store = None                        
+            self.vector_store = None                       
 
         raw_path = self.dir / RAW_FILE
         if raw_path.exists():
@@ -52,8 +42,8 @@ class HistoryIndex:
     def upsert_turn(self, text: str, turn_id: int) -> None:
         meta = {
             "session_id": self.session_id,
-            "turn_id":    turn_id,
-            "ts":         datetime.datetime.now(datetime.UTC).isoformat(timespec='seconds'),
+            "turn_id": turn_id,
+            "ts": datetime.datetime.now(datetime.UTC).isoformat(timespec='seconds'),
         }
 
         if self.vector_store is None:                         
@@ -83,8 +73,7 @@ class HistoryIndex:
         return hybrid.get_relevant_documents(query)
 
 
-    @staticmethod
-    def delete(session_id: str) -> None:
-        d = BASE_DIR / session_id
+    def delete(self) -> None:
+        d = BASE_DIR / self.session_id
         if d.exists():
             shutil.rmtree(d, ignore_errors=True)

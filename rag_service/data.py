@@ -25,7 +25,7 @@ class Data:
             if not os.path.exists(self.config_path):
                 with open(self.config_path, 'w') as f:
                     json.dump({"role": default_role}, f)
-                return default_role
+                return self.roles.get(default_role, 'School Absence Coordinator')
             
             with open(self.config_path, 'r') as f:
                 config = json.load(f)
@@ -34,7 +34,7 @@ class Data:
                 
         except Exception as e:
             print(f"Error reading config: {e}")
-            return default_role
+            return self.roles.get(default_role, 'School Absence Coordinator')
     
     @staticmethod
     def update_role(new_role):
