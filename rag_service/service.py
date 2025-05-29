@@ -68,7 +68,7 @@ def generate_session_id(session_id: SessionId|None, max_time: int) -> SessionId:
 @app.post('/chat')
 async def ask_question(request: Query):
     try:
-        session_id = generate_session_id(request.session_id, 3600)
+        session_id = generate_session_id(request.session_id, 10)
         id = session_id.session_id
         history_msgs = Memory.load(session_id=id)
         hist_index = HistoryIndex(id) if Memory.turn_count(id) >= 5 else None
