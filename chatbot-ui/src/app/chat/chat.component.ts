@@ -62,8 +62,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         Math.abs(cur.timestamp.getTime() - prev.timestamp.getTime()) < 5000
       ) {
         if (prev.content !== cur.content) {
-          prev.content = `${prev.content}
-${cur.content}`;
+          prev.content = `${prev.content}\n${cur.content}`;
         }
         prev.timestamp = cur.timestamp;
       } else {
@@ -74,9 +73,14 @@ ${cur.content}`;
   }
 
   checkBackendAvailability(): void {
-    fetch('http://localhost:5005/version')
-      .then(() => (this.backendUnavailable = false))
-      .catch(() => (this.backendUnavailable = true));
+    this.chatService.checkBackendHealth().subscribe({
+      next: (isHealthy) => {
+        this.backendUnavailable = !isHealthy;
+      },
+      error: () => {
+        this.backendUnavailable = true;
+      },
+    });
   }
 
   ngAfterViewChecked(): void {
@@ -88,12 +92,14 @@ ${cur.content}`;
 
   sendMessage(): void {
     if (!this.userMessage.trim() || this.loading) return;
+
     const text = this.userMessage.trim();
     const userMsg: Message = {
       content: text,
       sender: 'user',
       timestamp: new Date(),
     };
+
     this.chatService.addMessage(userMsg);
     this.messages = this.mergeAdjacentMessages(this.chatService.getMessages());
 
@@ -106,10 +112,22 @@ ${cur.content}`;
           this.chatService.getMessages()
         );
         this.loading = false;
+        this.backendUnavailable = false;
       },
-      error: () => {
+      error: (error) => {
         this.loading = false;
         this.backendUnavailable = true;
+
+        const errorMsg: Message = {
+          content:
+            "Sorry, I couldn't process your request. Please check if the server is running.",
+          sender: 'bot',
+          timestamp: new Date(),
+        };
+        this.chatService.addMessage(errorMsg);
+        this.messages = this.mergeAdjacentMessages(
+          this.chatService.getMessages()
+        );
       },
     });
   }

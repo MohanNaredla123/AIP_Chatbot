@@ -1,4 +1,4 @@
-from rag_service.utils.data import Data
+from data import Data
 
 import numpy as np
 import torch
@@ -6,8 +6,9 @@ import pickle
 from langchain.vectorstores import FAISS
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.schema import Document
-from transformers.models.auto.tokenization_auto import AutoTokenizer
-from transformers.models.auto.modeling_auto import AutoModelForSequenceClassification
+from transformers import AutoTokenizer # type: ignore
+from transformers import AutoModelForSequenceClassification #type: ignore
+from typing import List
 
 
 class Retrieve:
@@ -19,13 +20,15 @@ class Retrieve:
         self.top_k_retrieval = 8
         self.top_k_rerank = 4
         self.query = query
-        
     
-    def hybrid_retrieve(self):
+    def hybrid_retrieve(self):   
         emb = SentenceTransformerEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')
-        vs = FAISS.load_local(self.faiss_dir, emb, allow_dangerous_deserialization=True)
-        with open(self.bm25_dir, 'rb') as f:
-            bm25, texts, metas = pickle.load(f)
+        try:
+            vs = FAISS.load_local(self.faiss_dir, emb, allow_dangerous_deserialization=True)
+            with open(self.bm25_dir, 'rb') as f:
+                bm25, texts, metas = pickle.load(f)
+        except Exception as e:
+            print(f'Failed to load indexes: {e}')
 
         dense_docs = vs.similarity_search(self.query, self.top_k_retrieval)
         dense_doc_ids = {(d.metadata.get('section', ''), d.metadata.get('sub_section'), ''):d for d in dense_docs}
@@ -51,7 +54,7 @@ class Retrieve:
         return combined_results
 
     
-    def rerank(self, docs):
+    def rerank(self, docs) -> List[Document]:
 
         rerank_tok = AutoTokenizer.from_pretrained('BAAI/bge-reranker-base')
         if torch.backends.mps.is_available():
@@ -84,3 +87,7 @@ class Retrieve:
 
             return [docs[i] for i in np.argsort(scores)[::-1][:self.top_k_rerank]]
 
+
+# retriever = Retrieve(query='What is AIP?')
+# dcs = retriever.hybrid_retrieve()
+# retrieved_docs = retriever.rerank(dcs)
