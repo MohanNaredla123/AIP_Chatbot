@@ -39,6 +39,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
   ngOnInit(): void {
     this.messages = this.mergeAdjacentMessages(this.chatService.getMessages());
+
     if (this.messages.length === 0) {
       this.chatService.addMessage({
         content: 'Hello! How can I assist you today?',
@@ -49,6 +50,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         this.chatService.getMessages()
       );
     }
+
     this.checkBackendAvailability();
   }
 
@@ -116,18 +118,25 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       },
       error: (error) => {
         this.loading = false;
-        this.backendUnavailable = true;
 
         const errorMsg: Message = {
           content:
-            "Sorry, I couldn't process your request. Please check if the server is running.",
+            error.error?.detail ||
+            (error.status === 0 || error.status >= 500
+              ? "Sorry, I couldn't connect to the server. Please check if the service is running."
+              : "Sorry, I couldn't process your request. Please try again."),
           sender: 'bot',
           timestamp: new Date(),
         };
+
         this.chatService.addMessage(errorMsg);
         this.messages = this.mergeAdjacentMessages(
           this.chatService.getMessages()
         );
+
+        if (error.status === 0 || error.status >= 500) {
+          this.backendUnavailable = true;
+        }
       },
     });
   }

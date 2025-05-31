@@ -5,6 +5,7 @@ import { Message } from '../models/chat.model';
 
 interface RAGRequest {
   question: string;
+  user_id?: string;
   session_id?: {
     session_id: string;
     time_initialised: string;
@@ -30,16 +31,57 @@ export class ChatService {
     session_id: string;
     time_initialised: string;
   };
+  private userId?: string;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    const storedUserId = this.getStoredUserId();
+    if (storedUserId) {
+      this.userId = storedUserId;
+    }
+  }
 
   setApiBase(base: string): void {
     this.apiUrl = base.replace(/\/+$/, '');
   }
 
+  setUserId(userId: string): void {
+    const previousUserId = this.userId;
+
+    if (previousUserId && previousUserId !== userId) {
+      console.log(
+        `User changed from ${previousUserId} to ${userId}, clearing messages`
+      );
+      this.clearMessages();
+    }
+
+    this.userId = userId;
+    this.storeUserId(userId);
+  }
+
+  private storeUserId(userId: string): void {
+    try {
+      sessionStorage.setItem('chatbot_user_id', userId);
+    } catch (e) {
+      console.warn('Unable to store user ID:', e);
+    }
+  }
+
+  private getStoredUserId(): string | null {
+    try {
+      return sessionStorage.getItem('chatbot_user_id');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  getUserId(): string | undefined {
+    return this.userId;
+  }
+
   sendMessage(message: string): Observable<Message[]> {
     const payload: RAGRequest = {
       question: message,
+      user_id: this.userId,
       session_id: this.sessionInfo,
     };
 

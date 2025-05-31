@@ -27,35 +27,52 @@ export class AppComponent implements OnChanges {
 
   @Input('api-base') apiBase = 'http://localhost:8000';
   @Input('role') role = '';
-
-  private previousRole: string = '';
+  @Input('user-id') userId = '';
 
   constructor(private chatSvc: ChatService, private http: HttpClient) {
     this.chatSvc.setApiBase(this.apiBase);
+
+    const storedUserId = this.getStoredUserId();
+    if (storedUserId && !this.userId) {
+      this.userId = storedUserId;
+      this.chatSvc.setUserId(storedUserId);
+    }
   }
 
   ngOnChanges(ch: SimpleChanges): void {
-    if (ch['apiBase'] && ch['apiBase'].currentValue) {
-      this.chatSvc.setApiBase(ch['apiBase'].currentValue);
+    if (ch['userId']) {
+      const newUserId = ch['userId'].currentValue;
+      const previousUserId = ch['userId'].previousValue;
+
+      if (newUserId !== previousUserId && !ch['userId'].firstChange) {
+        console.log(`User ID changed from ${previousUserId} to ${newUserId}`);
+        this.chatSvc.setUserId(newUserId);
+      } else if (ch['userId'].firstChange && newUserId) {
+        this.chatSvc.setUserId(newUserId);
+      }
     }
 
-    if (
-      ch['role'] &&
-      ch['role'].currentValue &&
-      ch['role'].currentValue !== this.previousRole
-    ) {
-      this.previousRole = ch['role'].currentValue;
+    if (ch['role'] && ch['role'].currentValue !== ch['role'].previousValue) {
       this.updateRoleConfig(ch['role'].currentValue);
     }
   }
 
+  private getStoredUserId(): string | null {
+    try {
+      return sessionStorage.getItem('chatbot_user_id');
+    } catch (e) {
+      return null;
+    }
+  }
+
   private updateRoleConfig(role: string): void {
+    if (!role) return;
+
     const roleEndpoint = `${this.apiBase}/update-role`;
 
     this.http.post(roleEndpoint, { role }).subscribe({
       next: (response) => {
         console.log('Role updated successfully:', response);
-        this.chatSvc.clearMessages();
       },
       error: (error) => {
         console.error('Failed to update role:', error);

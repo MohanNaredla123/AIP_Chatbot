@@ -2,7 +2,6 @@ from __future__ import annotations
 import datetime, pathlib, pickle, shutil
 from typing import List, Optional
 
-from langchain.docstore import InMemoryDocstore
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.schema import Document
 from langchain.vectorstores import FAISS

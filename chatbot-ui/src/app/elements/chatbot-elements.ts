@@ -24,18 +24,24 @@ async function registerChatbotElement() {
     injector: app.injector,
   });
 
-  (ChatbotElement as any).observedAttributes = ['api-base', 'role'];
+  (ChatbotElement as any).observedAttributes = ['api-base', 'role', 'user-id'];
 
   (ChatbotElement as any).prototype.attributeChangedCallback = function (
     name: string,
-    _old: string,
-    value: string
+    oldValue: string | null,
+    newValue: string | null
   ) {
-    if (name === 'api-base') {
-      (this as any).apiBase = value;
-    }
-    if (name === 'role') {
-      (this as any).role = value;
+    if (oldValue === newValue) return;
+
+    const propertyMap: { [key: string]: string } = {
+      'api-base': 'apiBase',
+      role: 'role',
+      'user-id': 'userId',
+    };
+
+    const propertyName = propertyMap[name];
+    if (propertyName && newValue !== null) {
+      (this as any)[propertyName] = newValue;
     }
   };
 

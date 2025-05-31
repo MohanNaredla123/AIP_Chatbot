@@ -10,14 +10,14 @@ class Data:
             '4': 'PED Absence Coordinator',
             '5': 'IT Administrator'
         }
-        self.config_path = 'config/role_config.json'
+        self.config_path = 'rag_service/config/role_config.json'
         self.role = self._get_role_from_config()
         self.data_path = f"rag_service/data/manuals/{self.role} Manual.txt"
         self.faiss_dir = f"rag_service/data/index{self.role.split(' ')[0]}/faiss"
         self.bm25_dir = f"rag_service/data/index{self.role.split(' ')[0]}/bm25.pkl"
     
     def _get_role_from_config(self):
-        default_role = '1'
+        default_role = '2'
         
         try:
             os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
@@ -30,7 +30,7 @@ class Data:
             with open(self.config_path, 'r') as f:
                 config = json.load(f)
                 role_no = config.get("role", default_role)
-                return "PED Roles" if role_no in ['3', '4', '5'] else self.roles.get(role_no, '1')
+                return "PED Roles" if role_no in ['3', '4', '5'] else self.roles.get(role_no, '2')
                 
         except Exception as e:
             print(f"Error reading config: {e}")

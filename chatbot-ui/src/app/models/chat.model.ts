@@ -6,6 +6,7 @@ export interface Message {
 
 export interface ChatRequest {
   question: string;
+  user_id?: string;
   session_id?: {
     session_id: string;
     time_initialised: string;

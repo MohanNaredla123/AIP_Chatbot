@@ -1,9 +1,11 @@
+# rag_service/service.py
 from rag_service.utils.data import Data
 from rag_service.helpers.retrieve import Retrieve
 from rag_service.helpers.generate import Generation
 from rag_service.utils.memory import Memory
-from rag_service.utils.context_manager import HistoryIndex
+from rag_service.helpers.context_manager import HistoryIndex
 from rag_service.utils.tokens import count_tokens
+from rag_service.helpers.session_manager import SessionManager, SessionInfo
 
 from datetime import datetime as dt, timezone
 from pydantic import BaseModel, Field
@@ -12,6 +14,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
 from typing import Dict, Any, Optional
+import hashlib
 
 
 app = FastAPI()
@@ -30,46 +33,38 @@ class SessionId(BaseModel):
 
 class Query(BaseModel):
     question: str
+    user_id: Optional[str] = None
     session_id: Optional[SessionId] = None
 
 
 MAX_TOKENS_HISTORY = 1200
+SESSION_TIMEOUT = 3600
+
+
 def total_tokens(msgs):
     return sum(count_tokens(m["content"]) for m in msgs)
-
-
-def generate_session_id(session_id: SessionId|None, max_time: int) -> SessionId:
-
-    if session_id is None or session_id.session_id == "string" or session_id.session_id == "" or session_id.session_id == " ":
-        Memory.reset(session_id.session_id if session_id is not None else None)
-        index = HistoryIndex(session_id.session_id if session_id is not None else '')
-        index.delete()
-
-        return SessionId(
-            session_id=str(uuid.uuid4()),
-            time_initialised=dt.now(timezone.utc)
-        )
-    
-    
-    elif session_id is not None and (dt.now(timezone.utc) - session_id.time_initialised).total_seconds() > max_time:
-        Memory.reset(session_id.session_id)
-        index = HistoryIndex(session_id.session_id)
-        index.delete()
-
-        return SessionId(
-            session_id = str(uuid.uuid4()),
-            time_initialised = dt.now(timezone.utc)
-        )
-    
-    else:
-        return session_id
 
 
 @app.post('/chat')
 async def ask_question(request: Query):
     try:
-        session_id = generate_session_id(request.session_id, 10)
-        id = session_id.session_id
+        if not request.user_id:
+            raise HTTPException(
+                status_code=401, 
+                detail="Authentication required. Please log in to use the chatbot."
+            )
+        
+        session_info, is_new = SessionManager.get_or_create_session(
+            user_id=request.user_id,
+            timeout_seconds=SESSION_TIMEOUT
+        )
+        
+        session_id = SessionId(
+            session_id=session_info.session_id,
+            time_initialised=session_info.time_initialised
+        )
+        
+        id = session_info.session_id
         history_msgs = Memory.load(session_id=id)
         hist_index = HistoryIndex(id) if Memory.turn_count(id) >= 5 else None
 
@@ -107,13 +102,15 @@ async def ask_question(request: Query):
                 "answer":answer
             }
     
+    except HTTPException:
+        raise
     except Exception as e:
-        raise(HTTPException(status_code=500, detail=e))
-
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 class RoleUpdate(BaseModel):
     role: str
+
 
 @app.post('/update-role')
 async def update_role(request: RoleUpdate):
@@ -130,6 +127,35 @@ async def update_role(request: RoleUpdate):
 @app.get("/ping")
 def ping():
     return {"ok": True}
+
+
+@app.get("/session/{session_id}/info")
+async def get_session_info(session_id: str):
+    try:
+        messages = Memory.load(session_id)
+        turn_count = Memory.turn_count(session_id)
+        has_session = Memory.has_session(session_id)
+        
+        return {
+            "session_id": session_id,
+            "exists": has_session,
+            "turn_count": turn_count,
+            "message_count": len(messages)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/session/{session_id}")
+async def clear_session(session_id: str):
+    try:
+        Memory.reset(session_id)
+        index = HistoryIndex(session_id)
+        index.delete()
+        
+        return {"status": "success", "message": f"Session {session_id} cleared"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == '__main__':
