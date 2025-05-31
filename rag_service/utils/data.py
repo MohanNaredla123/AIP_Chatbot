@@ -12,9 +12,9 @@ class Data:
         }
         self.config_path = 'config/role_config.json'
         self.role = self._get_role_from_config()
-        self.data_path = f"data/manuals/{self.role} Manual.txt"
-        self.faiss_dir = f"data/index{self.role.split(' ')[0]}/faiss"
-        self.bm25_dir = f"data/index{self.role.split(' ')[0]}/bm25.pkl"
+        self.data_path = f"rag_service/data/manuals/{self.role} Manual.txt"
+        self.faiss_dir = f"rag_service/data/index{self.role.split(' ')[0]}/faiss"
+        self.bm25_dir = f"rag_service/data/index{self.role.split(' ')[0]}/bm25.pkl"
     
     def _get_role_from_config(self):
         default_role = '1'
@@ -38,7 +38,7 @@ class Data:
     
     @staticmethod
     def update_role(new_role):
-        config_path = 'config/role_config.json'
+        config_path = 'rag_service/config/role_config.json'
         
         try:
             os.makedirs(os.path.dirname(config_path), exist_ok=True)
