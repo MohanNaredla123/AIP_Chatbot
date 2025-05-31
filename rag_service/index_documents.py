@@ -1,7 +1,7 @@
 import os
 import re 
 import pickle
-from rag_service.data import Data
+from rag_service.utils.data import Data
 
 from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
@@ -15,7 +15,7 @@ class Embedding():
         self.data_path = data.data_path
         self.faiss_dir = data.faiss_dir
         self.bm25_dir = data.bm25_dir
-        self.index_dir = f'data/index{self.role.split(' ')[0]}'
+        self.index_dir = f'rag_service/data/index{self.role.split(' ')[0]}'
 
         
     def read_data(self) -> list:

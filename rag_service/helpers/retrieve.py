@@ -1,4 +1,4 @@
-from data import Data
+from rag_service.utils.data import Data
 
 import numpy as np
 import torch
@@ -87,7 +87,3 @@ class Retrieve:
 
             return [docs[i] for i in np.argsort(scores)[::-1][:self.top_k_rerank]]
 
-
-# retriever = Retrieve(query='What is AIP?')
-# dcs = retriever.hybrid_retrieve()
-# retrieved_docs = retriever.rerank(dcs)

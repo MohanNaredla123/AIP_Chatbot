@@ -1,9 +1,9 @@
-from data import Data
-from retrieve import Retrieve
-from generate import Generation
-from memory import Memory
-from context_manager import HistoryIndex
-from tokens import count_tokens
+from rag_service.utils.data import Data
+from rag_service.helpers.retrieve import Retrieve
+from rag_service.helpers.generate import Generation
+from rag_service.utils.memory import Memory
+from rag_service.utils.context_manager import HistoryIndex
+from rag_service.utils.tokens import count_tokens
 
 from datetime import datetime as dt, timezone
 from pydantic import BaseModel, Field
@@ -68,7 +68,7 @@ def generate_session_id(session_id: SessionId|None, max_time: int) -> SessionId:
 @app.post('/chat')
 async def ask_question(request: Query):
     try:
-        session_id = generate_session_id(request.session_id, 10)
+        session_id = generate_session_id(request.session_id, 3600)
         id = session_id.session_id
         history_msgs = Memory.load(session_id=id)
         hist_index = HistoryIndex(id) if Memory.turn_count(id) >= 5 else None

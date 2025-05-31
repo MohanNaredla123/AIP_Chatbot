@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 _enc_cache = {}
-MODEL = os.getenv('MODEL', 'gpt-3.5-turbo')
+MODEL = os.getenv('MODEL', 'gpt-4.1-mini')
 
 def count_tokens(text: str, model: str = MODEL) -> int:
     if model not in _enc_cache:

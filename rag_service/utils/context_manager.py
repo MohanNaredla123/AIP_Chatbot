@@ -2,7 +2,6 @@ from __future__ import annotations
 import datetime, pathlib, pickle, shutil
 from typing import List, Optional
 
-import faiss
 from langchain.docstore import InMemoryDocstore
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.schema import Document
@@ -11,7 +10,7 @@ from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers.ensemble import EnsembleRetriever
 
 
-BASE_DIR = pathlib.Path("data/indexHistory")
+BASE_DIR = pathlib.Path("rag_service/data/indexHistory")
 BASE_DIR.mkdir(exist_ok=True)
 RAW_FILE = "raw_texts.pkl"
 EMB = SentenceTransformerEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
