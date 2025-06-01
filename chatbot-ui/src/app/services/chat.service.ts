@@ -32,11 +32,14 @@ export class ChatService {
     time_initialised: string;
   };
   private userId?: string;
+  private readonly MESSAGES_KEY = 'chatbot_messages';
+  private readonly SESSION_KEY = 'chatbot_session';
 
   constructor(private http: HttpClient) {
     const storedUserId = this.getStoredUserId();
     if (storedUserId) {
       this.userId = storedUserId;
+      this.loadStoredData();
     }
   }
 
@@ -52,10 +55,15 @@ export class ChatService {
         `User changed from ${previousUserId} to ${userId}, clearing messages`
       );
       this.clearMessages();
+      this.clearStoredData();
     }
 
     this.userId = userId;
     this.storeUserId(userId);
+
+    if (userId) {
+      this.loadStoredData();
+    }
   }
 
   private storeUserId(userId: string): void {
@@ -71,6 +79,50 @@ export class ChatService {
       return sessionStorage.getItem('chatbot_user_id');
     } catch (e) {
       return null;
+    }
+  }
+
+  private loadStoredData(): void {
+    try {
+      const storedSession = sessionStorage.getItem(this.SESSION_KEY);
+      if (storedSession) {
+        this.sessionInfo = JSON.parse(storedSession);
+      }
+
+      const storedMessages = sessionStorage.getItem(this.MESSAGES_KEY);
+      if (storedMessages) {
+        const parsed = JSON.parse(storedMessages);
+        this.messages = parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        }));
+      }
+    } catch (e) {
+      console.warn('Unable to load stored data:', e);
+    }
+  }
+
+  private storeData(): void {
+    try {
+      if (this.sessionInfo) {
+        sessionStorage.setItem(
+          this.SESSION_KEY,
+          JSON.stringify(this.sessionInfo)
+        );
+      }
+
+      sessionStorage.setItem(this.MESSAGES_KEY, JSON.stringify(this.messages));
+    } catch (e) {
+      console.warn('Unable to store data:', e);
+    }
+  }
+
+  private clearStoredData(): void {
+    try {
+      sessionStorage.removeItem(this.SESSION_KEY);
+      sessionStorage.removeItem(this.MESSAGES_KEY);
+    } catch (e) {
+      console.warn('Unable to clear stored data:', e);
     }
   }
 
@@ -96,6 +148,7 @@ export class ChatService {
         };
 
         this.addMessage(botMessage);
+        this.storeData();
         return [botMessage];
       }),
       catchError(this.handleError)
@@ -109,6 +162,7 @@ export class ChatService {
 
   addMessage(message: Message) {
     this.messages.push(message);
+    this.storeData();
   }
 
   getMessages(): Message[] {
@@ -118,6 +172,7 @@ export class ChatService {
   clearMessages() {
     this.messages = [];
     this.sessionInfo = undefined;
+    this.clearStoredData();
   }
 
   checkBackendHealth(): Observable<boolean> {

@@ -7,14 +7,12 @@ from rag_service.helpers.context_manager import HistoryIndex
 from rag_service.utils.tokens import count_tokens
 from rag_service.helpers.session_manager import SessionManager, SessionInfo
 
-from datetime import datetime as dt, timezone
-from pydantic import BaseModel, Field
+from datetime import datetime as dt
+from pydantic import BaseModel
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import uuid
-from typing import Dict, Any, Optional
-import hashlib
+from typing import Optional
 
 
 app = FastAPI()
@@ -101,11 +99,12 @@ async def ask_question(request: Query):
                 "question": request.question,
                 "answer":answer
             }
-    
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Not able to fetch answer, {e}")
+        return {"session_id": session_id,
+                "question": request.question,
+                "answer":'Sorry, I was not able to understand your question, could you please rephrase it?'
+            }
 
 
 class RoleUpdate(BaseModel):

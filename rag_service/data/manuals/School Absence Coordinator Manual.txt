@@ -4,20 +4,20 @@
       • Track student‑attendance trends across schools.  
       • Plan evidence‑based strategies to improve attendance.  
       • Monitor progress through reporting periods.
-
+ 
    1.2 Your Responsibilities as School Absence Coordinator  
       ✔ Submit an annual attendance‑improvement plan for your school.  
       ✔ Analyze root causes of chronic absenteeism (e.g., transportation, health).  
       ✔ Develop tiered intervention strategies (Tiers 1 – 4).  
       ✔ Update progress after every reporting period and adjust targets.  
-
+ 
 2. Getting Started
    2.1 How to Register  
       1) Click "Register New Account".  
       2) Fill Out:  
          o First Name / Last Name  
-         o District Email (e.g., district.nm.gov; personal emails like Gmail are blocked).  
-         o District Name (select from dropdown).  
+         o School Email (e.g., school.nm.gov; personal emails like Gmail are blocked).  
+         o School Name (select from dropdown).  
          o Phone Number  
          o Password Requirements:  
             a. 12+ characters  
@@ -25,23 +25,65 @@
             c. Expires every 60 days.  
       3) Role: Select School Absence Coordinator.  
       4) Submit. Your request will be approved by your District or PED Absence Coordinator.  
-
-   2.2 Logging In  
+ 
+   2.2 Registration and Approval Workflow
+   1) Start
+   2) Fill Out Form
+   3) Check if Email Domain is Valid
+      - If No:
+         - Show Error
+      - If Yes:
+         - Send Request to Approver
+   4) Review Request
+   5) Check if Registration is Approved
+      - If No:
+         - Notify Coordinator
+      - If Yes:
+         - Activate Account
+         - Send Confirmation Email
+   6) End
+ 
+   2.3 Logging In  
       1) Visit the AIP application.  
       2) Enter registered email and password.  
       3) Complete two‑step authentication with the OTP sent to your email.  
-
-   2.3 First‑Time Setup  
-      1) If you hold multiple roles (e.g., School + District Coordinator), select your role.  
-      2) Home Screen – Displays certified schools/districts for the fiscal year.  
-      3) Announcements – Review PED alerts (e.g., deadlines, policy updates).  
-
-3. Creating Your School Plan
-   Follow these 7 steps to complete your school‑level AIP.  
-
-   3.1 Step 1 – Contact Information  
+ 
+   2.4 Login Workflow 
+   1) User Attempts Login
+   2) User enters Email & Password
+   3) Is Email Registered?
+      - NO:
+         - Account not found 
+      - YES:
+         a) Send Security Access Code to Email 📧
+         b) User enters Security Access Code
+         c) Is Security Access Code Valid?
+            - NO:
+               - Invalid Code 
+            - YES:
+               - Access Granted
+ 
+ 
+   2.5 Key Features and Navigation 
+      • Landing Page: If you have multiple roles (e.g., School + District Coordinator), select your role. 
+      • Home Screen: Displays certified schools/districts for the fiscal year. 
+      • Announcements: Check for PED alerts (e.g., deadlines, policy updates).
+ 
+3. Creating Your Plan
+   3.1 Steps to follow to complete school level attendance plan:
+      Follow these 7 steps to complete your school‑level AIP. 
+      School Attendance Improvement Plan Flow:
+         1) Contact Information – Identify primary contact
+         2) Subpopulation Targets – Set improvement goals
+         3) Root Cause – Analyze core issues
+         4) Tiers of Support – Implement tiered strategies
+         5) Progress Updates – Report on progress
+         6) Final Submittal – Submit plan for review
+         7) Print Plan – Finalize and print
+ 
+   3.2 Contact Information  
       Purpose: Identify the primary contact for the attendance plan and add team members involved in the process.
-
+ 
       Steps:
          1) School Contact:
             o Enter the contact person’s first name, last name, title, and email.
@@ -50,108 +92,114 @@
                School Name: BELEN HIGH  
                Contact First Name: Kristin  
                Contact Last Name: Garcia  
-               Contact Email: garcia@tech.com 
-
+               Contact Email: garcia@tech.com
+ 
          2) Save Progress – Click Save before navigating to the next tab.  
-
-   3.2 Step 2 – Subpopulation Improvement Targets  
+ 
+   3.3 Subpopulation Targets  
       Purpose: Identify attendance disparities across student groups to target interventions effectively.  
       How to Access:  
          1) Navigate to "Home > [Your School] > Subpopulation Improvement Targets".  
          2) Two sections appear:  
-            a) Chronic Absence Data for Sub‑populations (Demographics)  
-            b) Chronic Absence Data for Grade Levels  
-
-      A. Data Fields for Chronic Absence for Sub‑population  
+            a) School Attendance Improvement Targets by Subpopulation   
+            b) School Grade Attendance Improvement Targets by Subpopulation
+ 
+      A. School Attendance Improvement Targets by Subpopulation  
          Subpopulation Name: Auto‑filled groups (e.g., Female, Economically‑Disadvantaged)  
          Current Year Enrollment: Total students in subgroup (auto pulled from backend) 
          Historical Rates: Historical chronic absence rates (grayed out; read-only) 
          Current Year Target: Enter your goal (%) to reduce chronic absence for each subgroup
-
-      B. Data Fields for Chronic Absence for Grade Level
+ 
+      B. School Grade Attendance Targets by Subpopulation
          Grade Level: Pre-K through 12th grade (auto-filled)  
          Current Year Enrollment: Total students per grade (auto-pulled)  
          Historical Rates: Past chronic absence rates (read-only)  
-         Current Year Target: Set grade-specific improvement goals 
-
-   3.3 Step 3 – Root Cause Analysis  
-      Purpose: Document the underlying causes of chronic absenteeism using research and local data.
-
-      Sections to Complete:
-         1) National/Local Research: Describe trends (e.g., “Transportation barriers affect 30 % of students”).  
-         2) Supportive Factors: Existing resources (e.g., “Strong parent‑engagement programs”).  
-         3) Barriers: Challenges (e.g., “Transportation gaps”, “Language barriers”).  
-
-   3.4 Step 4 – Tiers of Support  
-      Purpose: Develop targeted interventions based on chronic absence severity. Each tier corresponds to a student's absenteeism level and requires specific strategies. 
-
+         Current Year Target: Set grade-specific improvement goals
+ 
+   3.4 Attendance Improvement Plan Guidelines
+      Purpose: 
+         The guideline structure ensures that schools follow a consistent, data-informed approach to reduce chronic 
+         absenteeism through tiered interventions. 
+      Step to Complete: 
+          Step 1: Determine Stakeholder Needs and Challenges 
+          Step 2: Get to the Core Issues Using the Root Cause Analysis 
+          Step 3: Develop Targeted Strategies 
+          Step 4: Measure Progress (every 40 days) 
+          Step 5: Review Progress Using Continuous Quality Improvement
+ 
+   3.5 Tiers of Support  
+      Purpose: Develop targeted interventions based on chronic absence severity. Each tier corresponds to a student's absenteeism level and requires specific strategies.
+ 
       1) Tier 1 (0 – 5 % absence): Whole‑school prevention  
          - Steps to complete:  
             a. Add Strategy  
-                  o Select from predefined options (e.g., "Engaging School Climate," "Parent Outreach Programs" or Other).  
-                  o Or Other Strategies  
-                  o Example: "Monthly attendance reward assemblies."  
+                  o List your predferred Strategy.
+                  o Provide a description of your strategy 
+                  o Outline your strategy based on determination from the root cause analysis, key progress indicators, data analysis, etc.   
             b. Implementation Plan  
                   o Action Steps: List specific activities (e.g., "Host biweekly parent workshops").  
                   o Responsible Parties: Assign staff (e.g., "Counselor: Maria Garcia").  
                   o Resources Needed: Budget, materials (e.g., "$500 for incentive prizes").  
                   o Timeline: Set milestones (e.g., "Launch by October 15").  
-
+ 
       2) Tier 2 (5 – 10 % absence) : Individualized support  
          - Steps to complete:  
             a. Add Strategy  
-                  o Choose interventions (e.g., "Attendance Mentoring," "Check‑In/Check‑Out Systems").  
-                  o Or Other Strategies  
+                  o List your predferred Strategy.
+                  o Provide a description of your strategy 
+                  o Outline your strategy based on determination from the root cause analysis, key progress indicators, data analysis, etc.     
             b. Implementation Plan  
                   o Action Steps: "Pair at‑risk students with peer mentors."  
                   o Responsible Parties: "Mentor Coordinator: John Doe."  
                   o Resources: "Training materials for mentors."  
                   o Timeline: "Match mentors by Week 6."  
-
+ 
       3) Tier 3 (10 – 20 % absence) : Early intervention  
             - Steps to complete:  
             a. Add Strategy  
-                  o Select options like "Family Resource Referrals" or "Academic Support Plans."  
-                  o Or Other Strategies  
+                  o List your predferred Strategy.
+                  o Provide a description of your strategy 
+                  o Outline your strategy based on determination from the root cause analysis, key progress indicators, data analysis, etc.    
             b. Implementation Plan  
                   o Action Steps: "Schedule home visits for students missing > 15 %."  
                   o Responsible Parties: "Social Worker: Lee Chen."  
                   o Resources: "Transportation for home visits."  
                   o Timeline: "Complete visits by November 30."  
-
+ 
       4) Tier 4 (20 %+ absence) : Intensive support  
             - Steps to complete:  
                a. Add Strategy  
-                  o Choose options like "Case Management" or "Community Agency Partnerships."  
-                  o Or Other Strategies  
+                  o List your predferred Strategy.
+                  o Provide a description of your strategy 
+                  o Outline your strategy based on determination from the root cause analysis, key progress indicators, data analysis, etc.    
                b. Implementation Plan  
                   o Action Steps: "Coordinate with local clinics for health barriers."  
                   o Responsible Parties: "Nurse: Sarah Kim."  
                   o Resources: "Memorandum of Understanding with Clinic X."  
-                  o Timeline: "Sign MOU by September 1."  
-
-   3.5 Step 5 – Final Submission of School Plan  
+                  o Timeline: "Sign MOU by September 1"  
+ 
+   3.6 Final Submission of School Plan  
       1) Review all entered data.  
       2) Check the certification box: “I certify this plan is complete.”  
       3) Click "Submit Plan".  
       Note: Submitted plans can only be edited after PED/District review.  
-
-   3.6 Step 6 – Progress Updates  
+ 
+   3.7 Progress Updates  
       Reporting Periods: 80‑day, 120‑day, end‑of‑year.  
       Steps:  
          1) Current chronic‑absence rates (pulled from backend).  
          2) Reflect on strategy effectiveness.  
          3) Adjust targets for the next period.  
-
-   3.7 Step 7 – Print Your Plan 
+ 
+   3.8 Print Your Plan 
       Options:
          1) Full PDF Report: Includes all sections and charts.
          2) Custom Reports: Select specific sections for sharing. 
       Steps to print:  
          1) Click "Print Plan".  
          2) Select "Full PDF Report" to include all sections and charts or select "Custom Report" and tick only the sections you need.  
-         3) Click "Generate" 
-
+         3) Click "Generate"
+ 
 4. Support & Troubleshooting
    1) Login Problems – Verify OTP and credentials.  
    2) Data Not Saving – Refresh the page and reconnect.  

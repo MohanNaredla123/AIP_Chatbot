@@ -68,7 +68,13 @@
       }"
     >
       <div class="message-content">
-        <div class="message-text">{{ m.content }}</div>
+        <div class="message-text">
+          <span *ngIf="m.sender === 'user'">{{ m.content }}</span>
+          <span
+            *ngIf="m.sender === 'bot'"
+            [innerHTML]="m.content | markdown"
+          ></span>
+        </div>
         <div class="message-time">{{ formatTimestamp(m.timestamp) }}</div>
       </div>
     </div>
