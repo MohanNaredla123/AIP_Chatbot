@@ -92,15 +92,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
 
   private autoResizeTextarea(): void {
     const textarea = this.messageInput.nativeElement;
-    textarea.style.height = 'auto';
-    textarea.style.height = textarea.scrollHeight + 'px';
 
-    if (textarea.scrollHeight > 120) {
-      textarea.style.height = '120px';
-      textarea.style.overflowY = 'auto';
-    } else {
-      textarea.style.overflowY = 'hidden';
-    }
+    textarea.style.height = 'auto';
+    const max = 140;
+
+    textarea.style.height = Math.min(textarea.scrollHeight, max) + 'px';
+    textarea.style.overflowY = textarea.scrollHeight > max ? 'auto' : 'hidden';
   }
 
   checkBackendAvailability(): void {
@@ -154,6 +151,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
     if (this.messageInput) {
       this.messageInput.nativeElement.style.height = '40px';
       this.messageInput.nativeElement.style.overflowY = 'hidden';
+      this.autoResizeTextarea();
     }
     this.loading = true;
 

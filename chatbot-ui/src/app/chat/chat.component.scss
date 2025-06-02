@@ -299,14 +299,16 @@
 .typing-indicator span:nth-child(3) {
   animation-delay: 0.4s;
 }
+
 .input-container {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 8px;
   background-color: #fff;
   border-top: 1px solid #ccc;
   gap: 8px;
   min-height: 60px;
+  box-sizing: border-box;
 }
 
 .input-container textarea,
@@ -329,9 +331,12 @@
   overflow-wrap: break-word;
   word-wrap: break-word;
   white-space: pre-wrap;
-
+  box-sizing: border-box;
+  overflow-y: hidden;
+  margin: 0;
+  min-width: 0;
   scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
+  scrollbar-color: #ccc transparent;
 
   &::-webkit-scrollbar {
     width: 4px;
@@ -342,16 +347,8 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: transparent;
+    background: #ccc;
     border-radius: 4px;
-  }
-
-  &:hover {
-    scrollbar-color: #ccc transparent;
-
-    &::-webkit-scrollbar-thumb {
-      background: #ccc;
-    }
   }
 
   &:focus {
@@ -376,6 +373,7 @@
   cursor: pointer;
   transition: background-color 0.2s;
   flex-shrink: 0;
+  margin-bottom: 0;
 
   &:focus {
     outline: none;

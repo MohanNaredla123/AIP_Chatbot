@@ -14,12 +14,16 @@ export class MarkdownPipe implements PipeTransform {
     let html = value;
 
     const codeBlocks: string[] = [];
-    html = html.replace(/```([^`]+)```/g, (match, code) => {
-      const index = codeBlocks.length;
+    html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
+      const idx = codeBlocks.length;
       codeBlocks.push(
         `<pre><code>${this.escapeHtml(code.trim())}</code></pre>`
       );
-      return `__CODE_BLOCK_${index}__`;
+      return `__CODE_BLOCK_${idx}__`;
+    });
+
+    codeBlocks.forEach((block, idx) => {
+      html = html.replace(`__CODE_BLOCK_${idx}__`, block);
     });
 
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -35,10 +39,6 @@ export class MarkdownPipe implements PipeTransform {
     html = html.replace(/(?<!^[\s]*[-*]\s)_([^_\n]+)_/g, '<em>$1</em>');
 
     html = this.processLists(html);
-
-    codeBlocks.forEach((block, index) => {
-      html = html.replace(`__CODE_BLOCK_${index}__`, block);
-    });
 
     html = html.replace(/(<\/h[1-6]>)\n/g, '$1');
     html = html.replace(/(<\/ul>)\n/g, '$1');

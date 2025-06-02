@@ -46,21 +46,73 @@ export class ChatService {
   };
   private userId?: string;
   private tabId: string = '';
+  private readonly TAB_ID_PREFIX = 'chatbot_tab_';
 
   constructor(private http: HttpClient) {
     this.initializeTabId();
   }
 
   private initializeTabId(): void {
-    let tabId = sessionStorage.getItem('chatbot_tab_id');
+    let tabId = this.getTabIdFromWindowName();
+
+    if (!tabId) {
+      try {
+        tabId = window.sessionStorage.getItem('chatbot_tab_id');
+      } catch (e) {
+        console.warn('SessionStorage access failed:', e);
+      }
+    }
 
     if (!tabId) {
       tabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem('chatbot_tab_id', tabId);
+    }
+
+    this.setTabIdInWindowName(tabId);
+    try {
+      window.sessionStorage.setItem('chatbot_tab_id', tabId);
+    } catch (e) {
+      console.warn('Failed to store in sessionStorage:', e);
     }
 
     this.tabId = tabId;
     console.log('Tab ID initialized:', this.tabId);
+  }
+
+  private getTabIdFromWindowName(): string | null {
+    if (typeof window === 'undefined' || !window.name) {
+      return null;
+    }
+
+    try {
+      const match = window.name.match(/chatbot_tab_id:([^;]+)/);
+      return match ? match[1] : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  private setTabIdInWindowName(tabId: string): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    let currentName = window.name || '';
+    currentName = currentName.replace(/chatbot_tab_id:[^;]+;?/, '');
+
+    window.name =
+      currentName + (currentName ? ';' : '') + `chatbot_tab_id:${tabId}`;
+  }
+
+  private clearTabId(): void {
+    try {
+      window.sessionStorage.removeItem('chatbot_tab_id');
+    } catch (e) {
+      console.warn('Failed to clear from sessionStorage:', e);
+    }
+
+    if (typeof window !== 'undefined' && window.name) {
+      window.name = window.name.replace(/chatbot_tab_id:[^;]+;?/, '');
+    }
   }
 
   setApiBase(base: string): void {
@@ -74,7 +126,7 @@ export class ChatService {
 
     if (previousUserId && previousUserId !== userId) {
       console.log(`User changed from ${previousUserId} to ${userId}`);
-      sessionStorage.removeItem('chatbot_tab_id');
+      this.clearTabId();
       this.initializeTabId();
     }
 
