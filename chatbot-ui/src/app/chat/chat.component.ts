@@ -9,6 +9,7 @@ import {
   Input,
   CUSTOM_ELEMENTS_SCHEMA,
   ViewEncapsulation,
+  AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,11 +26,13 @@ import { MarkdownPipe } from '../pipes/markdown.pipe';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   encapsulation: ViewEncapsulation.ShadowDom,
 })
-export class ChatComponent implements OnInit, AfterViewChecked {
+export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
   @Input() expanded = false;
   @Output() expand = new EventEmitter<boolean>();
   @Output() close = new EventEmitter<void>();
   @ViewChild('chatContainer') private chatContainer!: ElementRef;
+  @ViewChild('messageInput')
+  private messageInput!: ElementRef<HTMLTextAreaElement>;
 
   userMessage = '';
   messages: Message[] = [];
@@ -53,6 +56,31 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     }
 
     this.checkBackendAvailability();
+  }
+
+  ngAfterViewInit(): void {
+    if (this.messageInput) {
+      this.messageInput.nativeElement.addEventListener('input', () => {
+        this.autoResizeTextarea();
+      });
+      setTimeout(() => this.autoResizeTextarea(), 0);
+    }
+  }
+
+  private autoResizeTextarea(): void {
+    const textarea = this.messageInput.nativeElement;
+    textarea.style.height = '40px';
+
+    const scrollHeight = textarea.scrollHeight;
+    const newHeight = Math.min(scrollHeight, 120);
+
+    textarea.style.height = newHeight + 'px';
+
+    if (scrollHeight > 120) {
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.overflowY = 'hidden';
+    }
   }
 
   private mergeAdjacentMessages(input: Message[]): Message[] {
@@ -93,6 +121,13 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     } catch (_) {}
   }
 
+  handleEnterKey(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+    }
+  }
+
   sendMessage(): void {
     if (!this.userMessage.trim() || this.loading) return;
 
@@ -107,6 +142,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     this.messages = this.mergeAdjacentMessages(this.chatService.getMessages());
 
     this.userMessage = '';
+    if (this.messageInput) {
+      this.messageInput.nativeElement.style.height = '40px';
+      this.messageInput.nativeElement.style.overflowY = 'hidden';
+    }
     this.loading = true;
 
     this.chatService.sendMessage(text).subscribe({

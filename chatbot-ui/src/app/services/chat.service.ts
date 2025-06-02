@@ -32,15 +32,34 @@ export class ChatService {
     time_initialised: string;
   };
   private userId?: string;
+  private tabId: string;
   private readonly MESSAGES_KEY = 'chatbot_messages';
   private readonly SESSION_KEY = 'chatbot_session';
+  private readonly TAB_ID_KEY = 'chatbot_tab_id';
 
   constructor(private http: HttpClient) {
+    this.tabId = this.getOrCreateTabId();
+
     const storedUserId = this.getStoredUserId();
     if (storedUserId) {
       this.userId = storedUserId;
       this.loadStoredData();
     }
+  }
+
+  private getOrCreateTabId(): string {
+    let tabId = sessionStorage.getItem(this.TAB_ID_KEY);
+
+    if (!tabId) {
+      tabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem(this.TAB_ID_KEY, tabId);
+    }
+
+    return tabId;
+  }
+
+  private getTabSpecificKey(baseKey: string): string {
+    return `${baseKey}_${this.tabId}`;
   }
 
   setApiBase(base: string): void {
@@ -84,18 +103,24 @@ export class ChatService {
 
   private loadStoredData(): void {
     try {
-      const storedSession = sessionStorage.getItem(this.SESSION_KEY);
+      const storedSession = sessionStorage.getItem(
+        this.getTabSpecificKey(this.SESSION_KEY)
+      );
       if (storedSession) {
         this.sessionInfo = JSON.parse(storedSession);
       }
 
-      const storedMessages = sessionStorage.getItem(this.MESSAGES_KEY);
+      const storedMessages = sessionStorage.getItem(
+        this.getTabSpecificKey(this.MESSAGES_KEY)
+      );
       if (storedMessages) {
         const parsed = JSON.parse(storedMessages);
         this.messages = parsed.map((msg: any) => ({
           ...msg,
           timestamp: new Date(msg.timestamp),
         }));
+      } else {
+        this.messages = [];
       }
     } catch (e) {
       console.warn('Unable to load stored data:', e);
@@ -106,12 +131,15 @@ export class ChatService {
     try {
       if (this.sessionInfo) {
         sessionStorage.setItem(
-          this.SESSION_KEY,
+          this.getTabSpecificKey(this.SESSION_KEY),
           JSON.stringify(this.sessionInfo)
         );
       }
 
-      sessionStorage.setItem(this.MESSAGES_KEY, JSON.stringify(this.messages));
+      sessionStorage.setItem(
+        this.getTabSpecificKey(this.MESSAGES_KEY),
+        JSON.stringify(this.messages)
+      );
     } catch (e) {
       console.warn('Unable to store data:', e);
     }
@@ -119,8 +147,8 @@ export class ChatService {
 
   private clearStoredData(): void {
     try {
-      sessionStorage.removeItem(this.SESSION_KEY);
-      sessionStorage.removeItem(this.MESSAGES_KEY);
+      sessionStorage.removeItem(this.getTabSpecificKey(this.SESSION_KEY));
+      sessionStorage.removeItem(this.getTabSpecificKey(this.MESSAGES_KEY));
     } catch (e) {
       console.warn('Unable to clear stored data:', e);
     }

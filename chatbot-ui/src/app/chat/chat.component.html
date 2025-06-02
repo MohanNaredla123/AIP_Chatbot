@@ -2,7 +2,7 @@
   <div class="chat-header">
     <h1 class="chat-header-title">AIP Assistant</h1>
     <div class="header-actions">
-      <button class="expand-button" (click)="toggleExpand()">
+      <button class="expand-button" (click)="toggleExpand()" tabindex="-1">
         <svg
           *ngIf="!expanded"
           xmlns="http://www.w3.org/2000/svg"
@@ -39,7 +39,7 @@
         </svg>
       </button>
 
-      <button class="close-button" (click)="closeChat()">
+      <button class="close-button" (click)="closeChat()" tabindex="-1">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="30"
@@ -91,17 +91,21 @@
   </div>
 
   <div class="input-container">
-    <input
-      type="text"
+    <textarea
       [(ngModel)]="userMessage"
       placeholder="Type a message…"
-      (keyup.enter)="sendMessage()"
+      (keydown)="handleEnterKey($event)"
       [disabled]="loading"
-    />
+      class="message-input"
+      rows="1"
+      #messageInput
+      style="height: 40px; overflow-y: hidden"
+    ></textarea>
     <button
       [disabled]="!userMessage.trim() || loading"
       (click)="sendMessage()"
       [ngClass]="{ disabled: !userMessage.trim() || loading }"
+      tabindex="-1"
     >
       <svg
         role="img"
