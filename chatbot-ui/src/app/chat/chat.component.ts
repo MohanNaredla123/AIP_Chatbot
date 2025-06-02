@@ -37,24 +37,13 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
   userMessage = '';
   messages: Message[] = [];
   loading = false;
+  loadingHistory = true;
   backendUnavailable = false;
 
   constructor(private chatService: ChatService) {}
 
   ngOnInit(): void {
-    this.messages = this.mergeAdjacentMessages(this.chatService.getMessages());
-
-    if (this.messages.length === 0) {
-      this.chatService.addMessage({
-        content: 'Hello! How can I assist you today?',
-        sender: 'bot',
-        timestamp: new Date(),
-      });
-      this.messages = this.mergeAdjacentMessages(
-        this.chatService.getMessages()
-      );
-    }
-
+    this.loadChatHistory();
     this.checkBackendAvailability();
   }
 
@@ -67,46 +56,67 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
     }
   }
 
+  private loadChatHistory(): void {
+    this.loadingHistory = true;
+
+    this.chatService.loadChatHistory().subscribe({
+      next: (response) => {
+        if (response.messages && response.messages.length > 0) {
+          this.messages = response.messages.map((msg) => ({
+            content: msg.content,
+            sender: msg.role === 'user' ? 'user' : 'bot',
+            timestamp: new Date(msg.timestamp),
+          }));
+        } else {
+          this.addWelcomeMessage();
+        }
+        this.loadingHistory = false;
+      },
+      error: (error) => {
+        console.error('Failed to load chat history:', error);
+        this.addWelcomeMessage();
+        this.loadingHistory = false;
+      },
+    });
+  }
+
+  private addWelcomeMessage(): void {
+    this.messages = [
+      {
+        content: 'Hello! How can I assist you today?',
+        sender: 'bot',
+        timestamp: new Date(),
+      },
+    ];
+  }
+
   private autoResizeTextarea(): void {
     const textarea = this.messageInput.nativeElement;
-    textarea.style.height = '40px';
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
 
-    const scrollHeight = textarea.scrollHeight;
-    const newHeight = Math.min(scrollHeight, 120);
-
-    textarea.style.height = newHeight + 'px';
-
-    if (scrollHeight > 120) {
+    if (textarea.scrollHeight > 120) {
+      textarea.style.height = '120px';
       textarea.style.overflowY = 'auto';
     } else {
       textarea.style.overflowY = 'hidden';
     }
   }
 
-  private mergeAdjacentMessages(input: Message[]): Message[] {
-    const out: Message[] = [];
-    input.forEach((cur) => {
-      const prev = out[out.length - 1];
-      if (
-        prev &&
-        prev.sender === cur.sender &&
-        Math.abs(cur.timestamp.getTime() - prev.timestamp.getTime()) < 5000
-      ) {
-        if (prev.content !== cur.content) {
-          prev.content = `${prev.content}\n${cur.content}`;
-        }
-        prev.timestamp = cur.timestamp;
-      } else {
-        out.push({ ...cur });
-      }
-    });
-    return out;
-  }
-
   checkBackendAvailability(): void {
     this.chatService.checkBackendHealth().subscribe({
       next: (isHealthy) => {
         this.backendUnavailable = !isHealthy;
+
+        if (isHealthy) {
+          this.chatService.checkRedisHealth().subscribe({
+            next: (redisHealthy) => {
+              if (!redisHealthy) {
+                console.warn('Redis is not available');
+              }
+            },
+          });
+        }
       },
       error: () => {
         this.backendUnavailable = true;
@@ -138,8 +148,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
       timestamp: new Date(),
     };
 
-    this.chatService.addMessage(userMsg);
-    this.messages = this.mergeAdjacentMessages(this.chatService.getMessages());
+    this.messages.push(userMsg);
 
     this.userMessage = '';
     if (this.messageInput) {
@@ -149,10 +158,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
     this.loading = true;
 
     this.chatService.sendMessage(text).subscribe({
-      next: () => {
-        this.messages = this.mergeAdjacentMessages(
-          this.chatService.getMessages()
-        );
+      next: (botMessage) => {
+        this.messages.push(botMessage);
         this.loading = false;
         this.backendUnavailable = false;
       },
@@ -169,10 +176,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
           timestamp: new Date(),
         };
 
-        this.chatService.addMessage(errorMsg);
-        this.messages = this.mergeAdjacentMessages(
-          this.chatService.getMessages()
-        );
+        this.messages.push(errorMsg);
 
         if (error.status === 0 || error.status >= 500) {
           this.backendUnavailable = true;

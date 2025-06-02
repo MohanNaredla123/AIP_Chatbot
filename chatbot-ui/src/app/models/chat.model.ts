@@ -9,14 +9,14 @@ export interface ChatRequest {
   user_id?: string;
   session_id?: {
     session_id: string;
-    time_initialised: string;
+    time_initialized: string;
   };
 }
 
 export interface ChatResponse {
   session_id: {
     session_id: string;
-    time_initialised: string;
+    time_initialized: string;
   };
   question: string;
   answer: string;

@@ -301,13 +301,14 @@
 }
 .input-container {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   padding: 10px;
   background-color: #fff;
   border-top: 1px solid #ccc;
   gap: 8px;
   min-height: 60px;
 }
+
 .input-container textarea,
 .input-container .message-input {
   flex: 1;
@@ -319,12 +320,15 @@
   font-family: inherit;
   resize: none;
   min-height: 40px;
-  max-height: 120px;
-  overflow-y: auto;
+  height: 40px;
+  max-height: 140px;
   line-height: 1.4;
   transition: height 0.1s ease;
   display: block;
   width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
@@ -358,13 +362,14 @@
     box-shadow: 0 0 0 2px var(--clr-teal-500);
   }
 }
+
 .input-container button {
   background-color: var(--clr-teal-500);
   color: #fff;
   border: none;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -380,15 +385,18 @@
     outline: none;
   }
 }
+
 .input-container button:hover,
 .input-container button:active {
   background-color: var(--clr-teal-600);
   animation: pulse 0.35s ease-out;
 }
+
 .input-container button.disabled {
   background-color: var(--clr-teal-300);
   cursor: not-allowed;
 }
+
 .backend-error {
   position: fixed;
   top: 0;

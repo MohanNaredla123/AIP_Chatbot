@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, catchError, map, throwError, of } from 'rxjs';
 import { Message } from '../models/chat.model';
 
 interface RAGRequest {
@@ -8,17 +8,31 @@ interface RAGRequest {
   user_id?: string;
   session_id?: {
     session_id: string;
-    time_initialised: string;
+    time_initialized: string;
   };
+  tab_id?: string;
 }
 
 interface RAGResponse {
   session_id: {
     session_id: string;
-    time_initialised: string;
+    time_initialized: string;
   };
   question: string;
   answer: string;
+}
+
+interface ChatHistoryResponse {
+  session_id: {
+    session_id: string;
+    time_initialized: string;
+  };
+  messages: Array<{
+    content: string;
+    role: 'user' | 'assistant';
+    timestamp: string;
+  }>;
+  tab_id: string;
 }
 
 @Injectable({
@@ -26,40 +40,27 @@ interface RAGResponse {
 })
 export class ChatService {
   private apiUrl = 'http://localhost:8000';
-  private messages: Message[] = [];
   private sessionInfo?: {
     session_id: string;
-    time_initialised: string;
+    time_initialized: string;
   };
   private userId?: string;
-  private tabId: string;
-  private readonly MESSAGES_KEY = 'chatbot_messages';
-  private readonly SESSION_KEY = 'chatbot_session';
-  private readonly TAB_ID_KEY = 'chatbot_tab_id';
+  private tabId: string = '';
 
   constructor(private http: HttpClient) {
-    this.tabId = this.getOrCreateTabId();
-
-    const storedUserId = this.getStoredUserId();
-    if (storedUserId) {
-      this.userId = storedUserId;
-      this.loadStoredData();
-    }
+    this.initializeTabId();
   }
 
-  private getOrCreateTabId(): string {
-    let tabId = sessionStorage.getItem(this.TAB_ID_KEY);
+  private initializeTabId(): void {
+    let tabId = sessionStorage.getItem('chatbot_tab_id');
 
     if (!tabId) {
       tabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem(this.TAB_ID_KEY, tabId);
+      sessionStorage.setItem('chatbot_tab_id', tabId);
     }
 
-    return tabId;
-  }
-
-  private getTabSpecificKey(baseKey: string): string {
-    return `${baseKey}_${this.tabId}`;
+    this.tabId = tabId;
+    console.log('Tab ID initialized:', this.tabId);
   }
 
   setApiBase(base: string): void {
@@ -67,102 +68,56 @@ export class ChatService {
   }
 
   setUserId(userId: string): void {
+    if (!userId) return;
+
     const previousUserId = this.userId;
 
     if (previousUserId && previousUserId !== userId) {
-      console.log(
-        `User changed from ${previousUserId} to ${userId}, clearing messages`
-      );
-      this.clearMessages();
-      this.clearStoredData();
+      console.log(`User changed from ${previousUserId} to ${userId}`);
+      sessionStorage.removeItem('chatbot_tab_id');
+      this.initializeTabId();
     }
 
     this.userId = userId;
-    this.storeUserId(userId);
-
-    if (userId) {
-      this.loadStoredData();
-    }
   }
 
-  private storeUserId(userId: string): void {
-    try {
-      sessionStorage.setItem('chatbot_user_id', userId);
-    } catch (e) {
-      console.warn('Unable to store user ID:', e);
+  loadChatHistory(): Observable<ChatHistoryResponse> {
+    if (!this.userId) {
+      console.error('User ID not set');
+      return throwError(() => new Error('User ID not set'));
     }
-  }
 
-  private getStoredUserId(): string | null {
-    try {
-      return sessionStorage.getItem('chatbot_user_id');
-    } catch (e) {
-      return null;
-    }
-  }
-
-  private loadStoredData(): void {
-    try {
-      const storedSession = sessionStorage.getItem(
-        this.getTabSpecificKey(this.SESSION_KEY)
+    return this.http
+      .get<ChatHistoryResponse>(
+        `${this.apiUrl}/chat/history/${this.userId}/${this.tabId}`
+      )
+      .pipe(
+        map((response) => {
+          if (response.session_id) {
+            this.sessionInfo = response.session_id;
+          }
+          return response;
+        }),
+        catchError((error) => {
+          console.error('Failed to load chat history:', error);
+          return of({
+            session_id: this.sessionInfo || {
+              session_id: '',
+              time_initialized: new Date().toISOString(),
+            },
+            messages: [],
+            tab_id: this.tabId,
+          });
+        })
       );
-      if (storedSession) {
-        this.sessionInfo = JSON.parse(storedSession);
-      }
-
-      const storedMessages = sessionStorage.getItem(
-        this.getTabSpecificKey(this.MESSAGES_KEY)
-      );
-      if (storedMessages) {
-        const parsed = JSON.parse(storedMessages);
-        this.messages = parsed.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp),
-        }));
-      } else {
-        this.messages = [];
-      }
-    } catch (e) {
-      console.warn('Unable to load stored data:', e);
-    }
   }
 
-  private storeData(): void {
-    try {
-      if (this.sessionInfo) {
-        sessionStorage.setItem(
-          this.getTabSpecificKey(this.SESSION_KEY),
-          JSON.stringify(this.sessionInfo)
-        );
-      }
-
-      sessionStorage.setItem(
-        this.getTabSpecificKey(this.MESSAGES_KEY),
-        JSON.stringify(this.messages)
-      );
-    } catch (e) {
-      console.warn('Unable to store data:', e);
-    }
-  }
-
-  private clearStoredData(): void {
-    try {
-      sessionStorage.removeItem(this.getTabSpecificKey(this.SESSION_KEY));
-      sessionStorage.removeItem(this.getTabSpecificKey(this.MESSAGES_KEY));
-    } catch (e) {
-      console.warn('Unable to clear stored data:', e);
-    }
-  }
-
-  getUserId(): string | undefined {
-    return this.userId;
-  }
-
-  sendMessage(message: string): Observable<Message[]> {
+  sendMessage(message: string): Observable<Message> {
     const payload: RAGRequest = {
       question: message,
       user_id: this.userId,
       session_id: this.sessionInfo,
+      tab_id: this.tabId,
     };
 
     return this.http.post<RAGResponse>(`${this.apiUrl}/chat`, payload).pipe(
@@ -175,9 +130,7 @@ export class ChatService {
           timestamp: new Date(),
         };
 
-        this.addMessage(botMessage);
-        this.storeData();
-        return [botMessage];
+        return botMessage;
       }),
       catchError(this.handleError)
     );
@@ -188,19 +141,12 @@ export class ChatService {
     return throwError(() => error);
   }
 
-  addMessage(message: Message) {
-    this.messages.push(message);
-    this.storeData();
-  }
+  clearChat(): Observable<any> {
+    if (!this.userId) {
+      return throwError(() => new Error('User ID not set'));
+    }
 
-  getMessages(): Message[] {
-    return this.messages;
-  }
-
-  clearMessages() {
-    this.messages = [];
-    this.sessionInfo = undefined;
-    this.clearStoredData();
+    return this.http.delete(`${this.apiUrl}/chat/${this.userId}/${this.tabId}`);
   }
 
   checkBackendHealth(): Observable<boolean> {
@@ -210,5 +156,22 @@ export class ChatService {
         return throwError(() => new Error('Backend unavailable'));
       })
     );
+  }
+
+  checkRedisHealth(): Observable<boolean> {
+    return this.http
+      .get<{ redis_connected: boolean }>(`${this.apiUrl}/redis/health`)
+      .pipe(
+        map((response) => response.redis_connected),
+        catchError(() => of(false))
+      );
+  }
+
+  getUserId(): string | undefined {
+    return this.userId;
+  }
+
+  getTabId(): string {
+    return this.tabId;
   }
 }

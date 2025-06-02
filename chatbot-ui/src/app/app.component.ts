@@ -31,12 +31,6 @@ export class AppComponent implements OnChanges {
 
   constructor(private chatSvc: ChatService, private http: HttpClient) {
     this.chatSvc.setApiBase(this.apiBase);
-
-    const storedUserId = this.getStoredUserId();
-    if (storedUserId && !this.userId) {
-      this.userId = storedUserId;
-      this.chatSvc.setUserId(storedUserId);
-    }
   }
 
   ngOnChanges(ch: SimpleChanges): void {
@@ -44,24 +38,14 @@ export class AppComponent implements OnChanges {
       const newUserId = ch['userId'].currentValue;
       const previousUserId = ch['userId'].previousValue;
 
-      if (newUserId !== previousUserId && !ch['userId'].firstChange) {
+      if (newUserId !== previousUserId) {
         console.log(`User ID changed from ${previousUserId} to ${newUserId}`);
-        this.chatSvc.setUserId(newUserId);
-      } else if (ch['userId'].firstChange && newUserId) {
         this.chatSvc.setUserId(newUserId);
       }
     }
 
     if (ch['role'] && ch['role'].currentValue !== ch['role'].previousValue) {
       this.updateRoleConfig(ch['role'].currentValue);
-    }
-  }
-
-  private getStoredUserId(): string | null {
-    try {
-      return sessionStorage.getItem('chatbot_user_id');
-    } catch (e) {
-      return null;
     }
   }
 
