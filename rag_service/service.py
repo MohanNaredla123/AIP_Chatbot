@@ -47,12 +47,14 @@ def total_tokens(msgs):
 
 @app.post('/chat')
 async def ask_question(request: Query):
+    if not request.user_id:
+        return {
+            'session_id': '',
+            'question': request.question,
+            'answer': 'Please login into the application to access the chatbot'
+        }
+    
     try:
-        if not request.user_id:
-            raise HTTPException(
-                status_code=401, 
-                detail="Authentication required. Please log in to use the chatbot."
-            )
         
         if not request.tab_id:
             raise HTTPException(

@@ -35,6 +35,11 @@ interface ChatHistoryResponse {
   tab_id: string;
 }
 
+interface WelcomeMessage {
+  content: string;
+  timestamp: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -45,11 +50,15 @@ export class ChatService {
     time_initialized: string;
   };
   private userId?: string;
-  private tabId: string = '';
-  private readonly TAB_ID_PREFIX = 'chatbot_tab_';
+  private tabId = '';
+  private readonly WELCOME_MSG_KEY_PREFIX = 'chatbot_welcome_msg_';
 
   constructor(private http: HttpClient) {
     this.initializeTabId();
+  }
+
+  private getWelcomeMsgKey(tabId: string): string {
+    return `${this.WELCOME_MSG_KEY_PREFIX}${tabId}`;
   }
 
   private initializeTabId(): void {
@@ -57,10 +66,8 @@ export class ChatService {
 
     if (!tabId) {
       try {
-        tabId = window.sessionStorage.getItem('chatbot_tab_id');
-      } catch (e) {
-        console.warn('SessionStorage access failed:', e);
-      }
+        tabId = window.sessionStorage.getItem('chatbot_tab_id') || '';
+      } catch (_) {}
     }
 
     if (!tabId) {
@@ -70,35 +77,62 @@ export class ChatService {
     this.setTabIdInWindowName(tabId);
     try {
       window.sessionStorage.setItem('chatbot_tab_id', tabId);
-    } catch (e) {
-      console.warn('Failed to store in sessionStorage:', e);
-    }
+    } catch (_) {}
 
     this.tabId = tabId;
-    console.log('Tab ID initialized:', this.tabId);
+    this.createAndStoreWelcomeMessage(this.tabId);
+  }
+
+  private createAndStoreWelcomeMessage(tabId: string): void {
+    const key = this.getWelcomeMsgKey(tabId);
+    if (window.sessionStorage.getItem(key)) return;
+
+    const welcomeMsg: WelcomeMessage = {
+      content: 'Hello! How can I assist you today?',
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      window.sessionStorage.setItem(key, JSON.stringify(welcomeMsg));
+    } catch (_) {}
+  }
+
+  getStoredWelcomeMessage(tabId: string): Message | null {
+    try {
+      const raw = window.sessionStorage.getItem(this.getWelcomeMsgKey(tabId));
+      if (!raw) return null;
+      const { content, timestamp } = JSON.parse(raw) as WelcomeMessage;
+      return {
+        content,
+        sender: 'bot',
+        timestamp: new Date(timestamp),
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  public getOrCreateWelcomeMessage(): Message {
+    const stored = this.getStoredWelcomeMessage(this.tabId);
+    if (stored) return stored;
+    this.createAndStoreWelcomeMessage(this.tabId);
+    return this.getStoredWelcomeMessage(this.tabId)!;
   }
 
   private getTabIdFromWindowName(): string | null {
-    if (typeof window === 'undefined' || !window.name) {
-      return null;
-    }
-
+    if (typeof window === 'undefined' || !window.name) return null;
     try {
       const match = window.name.match(/chatbot_tab_id:([^;]+)/);
       return match ? match[1] : null;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
   private setTabIdInWindowName(tabId: string): void {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
+    if (typeof window === 'undefined') return;
     let currentName = window.name || '';
     currentName = currentName.replace(/chatbot_tab_id:[^;]+;?/, '');
-
     window.name =
       currentName + (currentName ? ';' : '') + `chatbot_tab_id:${tabId}`;
   }
@@ -106,10 +140,8 @@ export class ChatService {
   private clearTabId(): void {
     try {
       window.sessionStorage.removeItem('chatbot_tab_id');
-    } catch (e) {
-      console.warn('Failed to clear from sessionStorage:', e);
-    }
-
+      window.sessionStorage.removeItem(this.getWelcomeMsgKey(this.tabId));
+    } catch (_) {}
     if (typeof window !== 'undefined' && window.name) {
       window.name = window.name.replace(/chatbot_tab_id:[^;]+;?/, '');
     }
@@ -121,23 +153,16 @@ export class ChatService {
 
   setUserId(userId: string): void {
     if (!userId) return;
-
     const previousUserId = this.userId;
-
     if (previousUserId && previousUserId !== userId) {
-      console.log(`User changed from ${previousUserId} to ${userId}`);
       this.clearTabId();
       this.initializeTabId();
     }
-
     this.userId = userId;
   }
 
   loadChatHistory(): Observable<ChatHistoryResponse> {
-    if (!this.userId) {
-      console.error('User ID not set');
-      return throwError(() => new Error('User ID not set'));
-    }
+    if (!this.userId) return throwError(() => new Error('User ID not set'));
 
     return this.http
       .get<ChatHistoryResponse>(
@@ -145,22 +170,31 @@ export class ChatService {
       )
       .pipe(
         map((response) => {
-          if (response.session_id) {
-            this.sessionInfo = response.session_id;
+          if (response.session_id) this.sessionInfo = response.session_id;
+          const welcomeMsg = this.getStoredWelcomeMessage(this.tabId);
+          if (
+            welcomeMsg &&
+            (response.messages.length === 0 ||
+              response.messages[0].content !== welcomeMsg.content)
+          ) {
+            response.messages.unshift({
+              content: welcomeMsg.content,
+              role: 'assistant' as const,
+              timestamp: welcomeMsg.timestamp.toISOString(),
+            });
           }
           return response;
         }),
-        catchError((error) => {
-          console.error('Failed to load chat history:', error);
-          return of({
+        catchError(() =>
+          of({
             session_id: this.sessionInfo || {
               session_id: '',
               time_initialized: new Date().toISOString(),
             },
             messages: [],
             tab_id: this.tabId,
-          });
-        })
+          })
+        )
       );
   }
 
@@ -173,40 +207,31 @@ export class ChatService {
     };
 
     return this.http.post<RAGResponse>(`${this.apiUrl}/chat`, payload).pipe(
-      map((response) => {
+      map((response): Message => {
         this.sessionInfo = response.session_id;
-
-        const botMessage: Message = {
+        return {
           content: response.answer,
           sender: 'bot',
           timestamp: new Date(),
         };
-
-        return botMessage;
       }),
       catchError(this.handleError)
     );
   }
 
   private handleError(error: HttpErrorResponse) {
-    console.error('An error occurred:', error);
     return throwError(() => error);
   }
 
   clearChat(): Observable<any> {
-    if (!this.userId) {
-      return throwError(() => new Error('User ID not set'));
-    }
-
+    if (!this.userId) return throwError(() => new Error('User ID not set'));
     return this.http.delete(`${this.apiUrl}/chat/${this.userId}/${this.tabId}`);
   }
 
   checkBackendHealth(): Observable<boolean> {
     return this.http.get<{ ok: boolean }>(`${this.apiUrl}/ping`).pipe(
       map((response) => response.ok === true),
-      catchError(() => {
-        return throwError(() => new Error('Backend unavailable'));
-      })
+      catchError(() => throwError(() => new Error('Backend unavailable')))
     );
   }
 

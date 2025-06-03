@@ -40,6 +40,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
   loadingHistory = true;
   backendUnavailable = false;
 
+  private readonly INITIAL_HEIGHT = 40;
+  private readonly MAX_HEIGHT = 140;
+
   constructor(private chatService: ChatService) {}
 
   ngOnInit(): void {
@@ -58,7 +61,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
 
   private loadChatHistory(): void {
     this.loadingHistory = true;
-
     this.chatService.loadChatHistory().subscribe({
       next: (response) => {
         if (response.messages && response.messages.length > 0) {
@@ -68,51 +70,57 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
             timestamp: new Date(msg.timestamp),
           }));
         } else {
-          this.addWelcomeMessage();
+          const welcomeMsg = this.chatService.getStoredWelcomeMessage(
+            this.chatService.getTabId()
+          );
+          if (welcomeMsg) {
+            this.messages = [welcomeMsg];
+          } else {
+            this.addWelcomeMessage();
+          }
         }
         this.loadingHistory = false;
       },
-      error: (error) => {
-        console.error('Failed to load chat history:', error);
-        this.addWelcomeMessage();
+      error: () => {
+        const welcomeMsg = this.chatService.getStoredWelcomeMessage(
+          this.chatService.getTabId()
+        );
+        if (welcomeMsg) {
+          this.messages = [welcomeMsg];
+        } else {
+          this.addWelcomeMessage();
+        }
         this.loadingHistory = false;
       },
     });
   }
 
   private addWelcomeMessage(): void {
-    this.messages = [
-      {
-        content: 'Hello! How can I assist you today?',
-        sender: 'bot',
-        timestamp: new Date(),
-      },
-    ];
+    this.messages = [this.chatService.getOrCreateWelcomeMessage()];
   }
 
-  private autoResizeTextarea(): void {
+  private autoResizeTextarea(reset = false): void {
     const textarea = this.messageInput.nativeElement;
 
-    textarea.style.height = 'auto';
-    const max = 140;
+    if (reset) {
+      textarea.style.height = `${this.INITIAL_HEIGHT}px`;
+      textarea.style.overflowY = 'hidden';
+      return;
+    }
 
-    textarea.style.height = Math.min(textarea.scrollHeight, max) + 'px';
-    textarea.style.overflowY = textarea.scrollHeight > max ? 'auto' : 'hidden';
+    textarea.style.height = 'auto';
+    const newHeight = Math.min(textarea.scrollHeight, this.MAX_HEIGHT);
+    textarea.style.height = `${newHeight}px`;
+    textarea.style.overflowY =
+      textarea.scrollHeight > this.MAX_HEIGHT ? 'auto' : 'hidden';
   }
 
   checkBackendAvailability(): void {
     this.chatService.checkBackendHealth().subscribe({
       next: (isHealthy) => {
         this.backendUnavailable = !isHealthy;
-
         if (isHealthy) {
-          this.chatService.checkRedisHealth().subscribe({
-            next: (redisHealthy) => {
-              if (!redisHealthy) {
-                console.warn('Redis is not available');
-              }
-            },
-          });
+          this.chatService.checkRedisHealth().subscribe();
         }
       },
       error: () => {
@@ -144,14 +152,10 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
       sender: 'user',
       timestamp: new Date(),
     };
-
     this.messages.push(userMsg);
-
     this.userMessage = '';
     if (this.messageInput) {
-      this.messageInput.nativeElement.style.height = '40px';
-      this.messageInput.nativeElement.style.overflowY = 'hidden';
-      this.autoResizeTextarea();
+      this.autoResizeTextarea(true);
     }
     this.loading = true;
 
@@ -163,7 +167,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
       },
       error: (error) => {
         this.loading = false;
-
         const errorMsg: Message = {
           content:
             error.error?.detail ||
@@ -173,9 +176,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit {
           sender: 'bot',
           timestamp: new Date(),
         };
-
         this.messages.push(errorMsg);
-
         if (error.status === 0 || error.status >= 500) {
           this.backendUnavailable = true;
         }

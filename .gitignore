@@ -19,6 +19,7 @@ __pycache__/
 *.pdf
 config/
 indexHistory/
+chatbot-ui/dist/chatbot-ui/browser/index.html
 chatbot-ui/dist/chatbot-ui/browser/favicon.ico
 chatbot-ui/dist/chatbot-ui/3rdpartylicenses.txt
 chatbot-ui/dist/chatbot-ui/prerendered-routes.json
