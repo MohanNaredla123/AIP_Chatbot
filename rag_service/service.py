@@ -77,7 +77,7 @@ async def ask_question(request: Query):
         history_msgs = Memory.load(id, request.user_id, request.tab_id)
         turn_count = Memory.turn_count(id, request.user_id, request.tab_id)
         
-        Memory.update_session_info(request.user_id, id, request.tab_id, {
+        Memory.update_session_info(user_id=request.user_id, session_id=id, tab_id=request.tab_id, session_info={
             'session_id': session_info.session_id,
             'time_initialized': session_info.time_initialized.isoformat()
         })
@@ -105,12 +105,12 @@ async def ask_question(request: Query):
         generator = Generation(query=request.question, docs=retrieved_docs, history=ctx_msgs)
         answer = generator.generate_answer()
 
-        Memory.append(id, request.user_id, request.tab_id, {
+        Memory.append(session_id=id, user_id=request.user_id, tab_id=request.tab_id, msg={
             "role": "user", 
             "content": request.question,
             "timestamp": dt.now().isoformat()
         })
-        Memory.append(id, request.user_id, request.tab_id, {
+        Memory.append(session_id=id, user_id=request.user_id, tab_id=request.tab_id, msg={
             "role": "assistant", 
             "content": answer,
             "timestamp": dt.now().isoformat()
@@ -163,7 +163,7 @@ async def get_chat_history(user_id: str, tab_id: str):
             timeout_seconds=SESSION_TIMEOUT
         )
         
-        messages = Memory.load(session_info.session_id, user_id, tab_id)
+        messages = Memory.load(session_id=session_info.session_id, user_id=user_id, tab_id=tab_id)
         
         formatted_messages = []
         for msg in messages:
