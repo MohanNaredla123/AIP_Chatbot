@@ -8,12 +8,17 @@ from rag_service.helpers.session_manager import SessionManager, SessionInfo
 from rag_service.utils.redis_client import RedisClient
 
 from datetime import datetime as dt
+from dotenv import load_dotenv
 from pydantic import BaseModel
 import uvicorn
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List
 
+load_dotenv()
+API_HOST = os.getenv('API_HOST', 'localhost')
+API_PORT = int(os.getev('API_PORT', 8000))
 
 app = FastAPI()
 app.add_middleware(
@@ -211,3 +216,7 @@ async def redis_health():
 @app.get("/ping")
 def ping():
     return {"ok": True}
+
+
+if __name__ == '__main__':
+    uvicorn.run(app, host=API_HOST, port=API_PORT)
