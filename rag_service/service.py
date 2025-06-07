@@ -18,7 +18,7 @@ from typing import Optional, List
 
 load_dotenv()
 API_HOST = os.getenv('API_HOST', 'localhost')
-API_PORT = int(os.getev('API_PORT', 8000))
+API_PORT = int(os.getenv('API_PORT', 8000))
 
 app = FastAPI()
 app.add_middleware(
