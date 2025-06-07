@@ -30,4 +30,5 @@ chatbot-ui/dist/chatbot-ui/prerendered-routes.json
 npm-debug.log
 yarn-error.log
 .angular
+AIPClient/
 

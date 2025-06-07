@@ -88,7 +88,7 @@ export class ChatService {
     if (window.sessionStorage.getItem(key)) return;
 
     const welcomeMsg: WelcomeMessage = {
-      content: 'Hello! How can I assist you today?',
+      content: `Hey! 👋 I'm best at answering questions related to the AIP website and FAQs. If you need help navigating the site or have questions about common topics, feel free to ask! I'm here to help.`,
       timestamp: new Date().toISOString(),
     };
 

@@ -33,6 +33,10 @@ async function registerChatbotElement() {
   ) {
     if (oldValue === newValue) return;
 
+    console.log(
+      `Attribute Changed: ${name}, Old Value: ${oldValue}, New Value: ${newValue}`
+    );
+
     const propertyMap: { [key: string]: string } = {
       'api-base': 'apiBase',
       role: 'role',
